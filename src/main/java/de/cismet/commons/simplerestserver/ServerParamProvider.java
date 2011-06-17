@@ -17,6 +17,10 @@ import java.util.Map;
  */
 public interface ServerParamProvider {
 
+    //~ Instance fields --------------------------------------------------------
+
+    String PARAM_JERSEY_PROPERTY_PACKAGES = "com.sun.jersey.config.property.packages"; // NOI18N
+
     //~ Methods ----------------------------------------------------------------
 
     /**
