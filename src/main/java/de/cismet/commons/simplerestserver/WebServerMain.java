@@ -152,7 +152,7 @@ public final class WebServerMain {
         final Option help = new Option(
                 OPTION_SHORT_HELP,
                 OPTION_LONG_HELP,
-                true,
+                false,
                 NbBundle.getMessage(
                     WebServerMain.class,
                     "WebServerMain.createOptions().helpDescription")); // NOI18N
@@ -246,6 +246,13 @@ public final class WebServerMain {
             rootLogger.append("INFO");  // NOI18N
         }
 
+        // init socket appender
+        properties.put("log4j.appender.SOCKET", "org.apache.log4j.net.SocketAppender"); // NOI18N
+        properties.put("log4j.appender.SOCKET.remoteHost", "localhost");                // NOI18N
+        properties.put("log4j.appender.SOCKET.port", "4445");                           // NOI18N
+        properties.put("log4j.appender.SOCKET.locationInfo", "true");                   // NOI18N
+        rootLogger.append(", SOCKET");                                                  // NOI18N
+
         // init file appender
         properties.put("log4j.appender.FILE", "org.apache.log4j.RollingFileAppender");         // NOI18N
         properties.put("log4j.appender.FILE.file", config.getLogFile().getAbsolutePath());     // NOI18N
@@ -283,16 +290,16 @@ public final class WebServerMain {
             // create grizzly container for rest based services
             final ServerParamProvider spp = Lookup.getDefault().lookup(ServerParamProvider.class);
             if ((spp == null) || (spp.getServerParams() == null) || spp.getServerParams().isEmpty()) {
-                if (config.getServerParams() == null) {
+                if (grizzlyConfig.getServerParams() == null) {
                     System.err.println("[WARN] no server parameters provided, nothing will be served"); // NOI18N
-                } else if (config.getServerParams().isEmpty()) {
+                } else if (grizzlyConfig.getServerParams().isEmpty()) {
                     System.err.println("[WARN] server parameters empty, nothing will be served");       // NOI18N
                 }
             } else {
                 System.out.println("[INFO] found ServerParamProvider, using its parameters");           // NOI18N
 
-                config.clearServerParams();
-                config.putAllServerParams(spp.getServerParams());
+                grizzlyConfig.clearServerParams();
+                grizzlyConfig.putAllServerParams(spp.getServerParams());
             }
 
             CONTAINERS.add(new GrizzlyRESTContainer(grizzlyConfig));

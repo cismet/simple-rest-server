@@ -140,8 +140,10 @@ public final class WebServerConfig implements Cloneable {
     public boolean putServerParam(final String key, final String value) {
         if ((key != null) && !key.isEmpty() && (value != null) && !value.isEmpty()) {
             serverParams.put(key, value);
+
             return true;
         }
+
         return false;
     }
 
@@ -175,7 +177,7 @@ public final class WebServerConfig implements Cloneable {
      * @param  serverParams  the server parameters to add
      */
     public void putAllServerParams(final Map<String, String> serverParams) {
-        serverParams.putAll(serverParams);
+        this.serverParams.putAll(serverParams);
     }
 
     /**
