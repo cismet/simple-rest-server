@@ -301,7 +301,6 @@ public final class WebServerMain {
                 grizzlyConfig.clearServerParams();
                 grizzlyConfig.putAllServerParams(spp.getServerParams());
             }
-
             CONTAINERS.add(new GrizzlyRESTContainer(grizzlyConfig));
         } catch (final CloneNotSupportedException ex) {
             throw new WebServerException("cannot create grizzly configuration", ex); // NOI18N

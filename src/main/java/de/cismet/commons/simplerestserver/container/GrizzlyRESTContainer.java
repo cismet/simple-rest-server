@@ -13,6 +13,7 @@ import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
 
 import org.apache.log4j.Logger;
 
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Filter;
 import java.util.logging.Handler;
@@ -20,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 import de.cismet.commons.simplerestserver.AbstractWSContainer;
+import de.cismet.commons.simplerestserver.ServerParamProvider;
 import de.cismet.commons.simplerestserver.WebServerConfig;
 import de.cismet.commons.simplerestserver.WebServerException;
 
@@ -64,8 +66,22 @@ public final class GrizzlyRESTContainer extends AbstractWSContainer {
                 if (LOG.isInfoEnabled()) {
                     LOG.info("grizzly coming up @ " + baseuri + " :: server params: " + config.getServerParams()); // NOI18N
                 }
+
+                final Map<String, String> serverParams = config.getServerParams();
+
                 // the selector thread is created and immediately starts listening
-                selector = GrizzlyWebContainerFactory.create(baseuri, config.getServerParams());
+                selector = GrizzlyWebContainerFactory.create(baseuri, serverParams);
+
+                if (serverParams.containsKey(ServerParamProvider.PARAM_DEFAULT_IDLE_THREAD_TIMEOUT)) {
+                    final String timeoutString = serverParams.get(
+                            ServerParamProvider.PARAM_DEFAULT_IDLE_THREAD_TIMEOUT);
+                    try {
+                        final int timeout = Integer.parseInt(timeoutString);
+                        selector.setTransactionTimeout(timeout);
+                    } catch (final NumberFormatException ex) {
+                        LOG.warn("specified transaction timeout " + timeoutString + " is not a number -> ignored");
+                    }
+                }
             } catch (final Exception ex) {
                 final String message = "could not start grizzly webcontainer"; // NOI18N
                 LOG.error(message, ex);
@@ -75,7 +91,9 @@ public final class GrizzlyRESTContainer extends AbstractWSContainer {
     }
 
     /**
-     * {@inheritDoc}
+     * DOCUMENT ME!
+     *
+     * @inheritDoc  }
      */
     @Override
     public synchronized void down() {
