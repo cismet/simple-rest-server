@@ -9,7 +9,13 @@ package de.cismet.commons.simplerestserver.container;
 
 import com.sun.grizzly.Controller;
 import com.sun.grizzly.http.SelectorThread;
+import com.sun.grizzly.http.embed.GrizzlyWebServer;
+import com.sun.grizzly.http.servlet.ServletAdapter;
+import com.sun.grizzly.tcp.http11.GrizzlyAdapter;
+import com.sun.grizzly.tcp.http11.GrizzlyRequest;
+import com.sun.grizzly.tcp.http11.GrizzlyResponse;
 import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 import org.apache.log4j.Logger;
 
@@ -37,9 +43,13 @@ public final class GrizzlyRESTContainer extends AbstractWSContainer {
 
     private static final transient Logger LOG = Logger.getLogger(GrizzlyRESTContainer.class);
 
+    private static final transient String DEFAULT_CTX_PATH = "/";
+
     //~ Instance fields --------------------------------------------------------
 
-    private transient SelectorThread selector;
+// private transient SelectorThread selector;
+
+    private transient GrizzlyWebServer webServer;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -61,27 +71,67 @@ public final class GrizzlyRESTContainer extends AbstractWSContainer {
      */
     @Override
     public synchronized void up() throws WebServerException {
-        if (selector == null) {
+        if (this.webServer == null) {
             try {
                 if (LOG.isInfoEnabled()) {
                     LOG.info("grizzly coming up @ " + baseuri + " :: server params: " + config.getServerParams()); // NOI18N
                 }
 
-                final Map<String, String> serverParams = config.getServerParams();
+                this.webServer = new GrizzlyWebServer(config.getPort());
 
-                // the selector thread is created and immediately starts listening
-                selector = GrizzlyWebContainerFactory.create(baseuri, serverParams);
+                final ServletAdapter jerseyAdapter;
+
+                // handle static resources, if specified
+                final Map<String, String> serverParams = config.getServerParams();
+                if (serverParams.containsKey(ServerParamProvider.PARAM_STATIC_RESOURCE_PATH)) {
+                    final String staticResourcePath = serverParams.get(ServerParamProvider.PARAM_STATIC_RESOURCE_PATH);
+                    jerseyAdapter = new ServletAdapter(staticResourcePath);
+                    jerseyAdapter.setHandleStaticResources(true);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Found static resources " + staticResourcePath);
+                    }
+                } else {
+                    jerseyAdapter = new ServletAdapter();
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("No static resources specified");
+                    }
+                }
+
+                // pass server params to adapter
+                for (final Map.Entry<String, String> param : serverParams.entrySet()) {
+                    jerseyAdapter.addInitParameter(param.getKey(), param.getValue());
+                }
+
+                final String ctxPath;
+                if (serverParams.containsKey(ServerParamProvider.PARAM_SERVLET_CONTEXT)) {
+                    ctxPath = serverParams.get(ServerParamProvider.PARAM_SERVLET_CONTEXT);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Found context path: " + ctxPath);
+                    }
+                } else {
+                    ctxPath = DEFAULT_CTX_PATH;
+                    LOG.warn("No context path found -> Usind default: " + ctxPath);
+                }
+
+                jerseyAdapter.setContextPath(ctxPath);
+                jerseyAdapter.setServletInstance(new ServletContainer());
+
+                // register all above defined adapters
+                this.webServer.addGrizzlyAdapter(jerseyAdapter, new String[] { ctxPath });
 
                 if (serverParams.containsKey(ServerParamProvider.PARAM_DEFAULT_IDLE_THREAD_TIMEOUT)) {
                     final String timeoutString = serverParams.get(
                             ServerParamProvider.PARAM_DEFAULT_IDLE_THREAD_TIMEOUT);
                     try {
                         final int timeout = Integer.parseInt(timeoutString);
-                        selector.setTransactionTimeout(timeout);
+                        this.webServer.getSelectorThread().setTransactionTimeout(timeout);
                     } catch (final NumberFormatException ex) {
                         LOG.warn("specified transaction timeout " + timeoutString + " is not a number -> ignored");
                     }
                 }
+
+                // let Grizzly run
+                this.webServer.start();
             } catch (final Exception ex) {
                 final String message = "could not start grizzly webcontainer"; // NOI18N
                 LOG.error(message, ex);
@@ -97,13 +147,13 @@ public final class GrizzlyRESTContainer extends AbstractWSContainer {
      */
     @Override
     public synchronized void down() {
-        if (selector != null) {
+        if (this.webServer != null) {
             if (LOG.isInfoEnabled()) {
                 LOG.info("grizzly coming down @ " + baseuri + " :: server params: " + config.getServerParams()); // NOI18N
             }
 
-            selector.stopEndpoint();
-            selector = null;
+            this.webServer.stop();
+            this.webServer = null;
         }
     }
 

@@ -22,6 +22,9 @@ public interface ServerParamProvider {
     String PARAM_JERSEY_PROPERTY_PACKAGES = "com.sun.jersey.config.property.packages";                 // NOI18N
     String PARAM_DEFAULT_IDLE_THREAD_TIMEOUT = "de.cismet.commons.simplerestserver.idleThreadTimeout"; // NOI18N
 
+    String PARAM_SERVLET_CONTEXT = "de.cismet.commons.simplerestserver.servletContextPath";      // NOI18N
+    String PARAM_STATIC_RESOURCE_PATH = "de.cismet.commons.simplerestserver.staticResourcePath"; // NOI18N
+
     //~ Methods ----------------------------------------------------------------
 
     /**
