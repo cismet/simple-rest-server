@@ -5,22 +5,43 @@
     <parent>
         <groupId>de.cismet</groupId>
         <artifactId>cismet-parent</artifactId>
-        <version>1.2.6</version>
+        <version>2.0-SNAPSHOT</version>
     </parent>
 
     <groupId>de.cismet.commons</groupId>
     <artifactId>simple-rest-server</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Simple REST Webserver</name>
     <description>Simple REST Webserver to rapidly implement independent standalone REST services</description>
 
+    <prerequisites>
+        <maven>3</maven>
+    </prerequisites>
+
     <scm>
-        <connection>scm:svn:svn+ssh://repositories/svn/repositories/central/de/cismet/commons/simple-rest-server/trunk</connection>
-        <developerConnection>scm:svn:svn+ssh://repositories/svn/repositories/central/de/cismet/commons/simple-rest-server/trunk</developerConnection>
-        <url>http://repositories:8082/central/browse/de/cismet/commons/simple-rest-server/trunk</url>
+        <connection>https://github.com/cismet/simple-rest-server.git</connection>
+        <developerConnection>scm:git:git@github.com:cismet/simple-rest-server.git</developerConnection>
+        <url>https://github.com/cismet/simple-rest-server</url>
     </scm>
+
+    <repositories>
+        <repository>
+            <id>cismet-repo</id>
+            <url>https://repo.cismet.de/repo</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+                <updatePolicy>daily</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+                <updatePolicy>interval:60</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -56,10 +77,7 @@
         <dependency>
             <groupId>com.sun.grizzly</groupId>
             <artifactId>grizzly-servlet-webserver</artifactId>
-<!--            <version>1.9.46</version>-->
-<!--            <version>1.9.10</version>-->
             <version>1.9.48</version>
-            
         </dependency>
     </dependencies>
 
@@ -67,6 +85,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
                 <configuration>
                     <archive>
                         <manifest>
