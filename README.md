@@ -1,4 +1,4 @@
-simple-rest-server
+simple-rest-server [![Build Status](http://ci.cismet.de/buildStatus/icon?job=simple-rest-server)](https://ci.cismet.de/job/simple-rest-server/)
 ==================
 
 simple-rest-server is a restful remote control toolkit for java apps.
